@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useSignup } from "../../hooks/useSignup";
+
 import "./Signup.css";
 
 export function Signup() {
@@ -8,11 +10,13 @@ export function Signup() {
   const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailError, setThumbnailError] = useState(null);
 
+  const { signup, isPending, error } = useSignup();
+
   const handleSubmit = e => {
     e.preventDefault();
 
-    console.log(email, password, displayName, thumbnail)
-  }
+    signup(email, password, displayName, thumbnail);
+  };
 
   const handleFileChange = e => {
     setThumbnail(null);
@@ -75,7 +79,9 @@ export function Signup() {
         <input type="file" required onChange={handleFileChange} />
         {thumbnailError && <div className="error">{thumbnailError}</div>}
       </label>
-      <button className="btn">Sign up</button>
+      {isPending && <button className="btn" disabled>Loading</button>}
+      {!isPending && <button className="btn">Sign up</button>}
+      {error && <div className="error">{error}</div>}
     </form>
   );
 }
