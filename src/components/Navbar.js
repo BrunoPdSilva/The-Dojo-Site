@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useLogout } from "../hooks/useLogout";
+import { useAuthContext } from "../hooks/useAuthContext";
 
 //Styles & Images
 import "./Navbar.css";
@@ -7,6 +8,7 @@ import Temple from "../assets/temple.svg";
 
 export function Navbar() {
   const { logout, isPending } = useLogout();
+  const { user } = useAuthContext();
 
   return (
     <div className="navbar">
@@ -16,23 +18,31 @@ export function Navbar() {
           <span>The Dojo</span>
         </li>
 
-        <li>
-          <Link to="/login">Login</Link>
-        </li>
-        <li>
-          <Link to="/signup">signup</Link>
-        </li>
+        {!user && (
+          <>
+            <li>
+              <Link to="/login">Login</Link>
+            </li>
+            <li>
+              <Link to="/signup">signup</Link>
+            </li>
+          </>
+        )}
 
         <li>
-          {isPending && (
-            <button className="btn" disabled>
-              Loading
-            </button>
-          )}
-          {!isPending && (
-            <button className="btn" onClick={logout}>
-              Logout
-            </button>
+          {user && (
+            <div>
+              {isPending && (
+                <button className="btn" disabled>
+                  Loading
+                </button>
+              )}
+              {!isPending && (
+                <button className="btn" onClick={logout}>
+                  Logout
+                </button>
+              )}
+            </div>
           )}
         </li>
       </ul>
