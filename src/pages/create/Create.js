@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
-import { useCollection } from "../../hooks/useCollection";
-import Select from "react-select";
+import { useState, useEffect } from 'react'
+import { useCollection } from '../../hooks/useCollection'
+import { useAuthContext } from '../../hooks/useAuthContext'
+import { timestamp } from '../../firebase/config'
+import { useFirestore } from '../../hooks/useFirestore'
+import { useHistory } from 'react-router'
+import Select from 'react-select'
 
 import "./Create.css";
 
@@ -12,26 +16,29 @@ const categories = [
 ];
 
 export function Create() {
-  const { documents } = useCollection("users");
-  const [users, setUsers] = useState([]);
+  const history = useHistory()
+  const { addDocument, response } = useFirestore('projects')
+  const { user } = useAuthContext()
+  const { documents } = useCollection('users')
+  const [users, setUsers] = useState([])
 
-  const [name, setName] = useState("");
-  const [details, setDetails] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [category, setCategory] = useState("");
-  const [assignedUsers, setAssignedUsers] = useState([]);
-  const [formError, setFormError] = useState(null);
+  // form field values
+  const [name, setName] = useState('')
+  const [details, setDetails] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [category, setCategory] = useState('')
+  const [assignedUsers, setAssignedUsers] = useState([])
+  const [formError, setFormError] = useState(null)
 
   useEffect(() => {
-    if (documents) {
-      const options = documents.map(user => {
-        return { value: user, label: user.displayName };
-      });
-      setUsers(options);
+    if(documents) {
+      setUsers(documents.map(user => {
+        return { value: {...user, id: user.id}, label: user.displayName }
+      }))
     }
-  }, [documents]);
+  }, [documents])
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setFormError(null);
 
@@ -42,6 +49,36 @@ export function Create() {
     if (assignedUsers.length < 1) {
       setFormError("Please assign the project to a user");
       return;
+    }
+
+    const createdBy = {
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      id: user.uid,
+    };
+
+    const assignedUsersList = assignedUsers.map(user => {
+      return {
+        displayName: user.value.displayName,
+        photoURL: user.value.photoURL,
+        id: user.value.id,
+      };
+    });
+
+    const project = {
+      name,
+      details,
+      category: category.value,
+      dueDate: timestamp.fromDate(new Date(dueDate)),
+      comments: [],
+      createdBy,
+      assignedUsersList,
+    };
+
+    await addDocument(project);
+    console.log(response)
+    if(!response.error){
+      history.push('/')
     }
   };
 
